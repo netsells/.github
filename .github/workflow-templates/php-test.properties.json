@@ -1,0 +1,9 @@
+{
+    "name": "Netsells: PHP Test",
+    "description": "Installs deps and runs tests via phpunit",
+    "iconName": "php",
+    "categories": [
+        "PHP",
+        "Composer"
+    ]
+}
