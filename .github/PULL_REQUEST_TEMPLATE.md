@@ -6,6 +6,8 @@
 <!-- Remove the below if this project doesn't have tests (maybe it should?) -->
 - [ ] New and existing tests pass locally with my changes
 - [ ] The code modified as part of this PR has been covered with tests
+<!-- Remove the below if this project doesn't include an API -->
+- [ ] The API spec has been modified inline with the changes in this PR
 
 ### Problem statement
 <!-- Description of the problem -->
