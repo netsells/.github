@@ -1,0 +1,7 @@
+{
+  "name": "Netsells: Flutter Test",
+  "description": "Installs deps and runs tests via Flutter test",
+  "categories": ["Dart", "Flutter"],
+  "iconName": "flutter",
+  "filePatterns": ["pubspec.yaml"]
+}

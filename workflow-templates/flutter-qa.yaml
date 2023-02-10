@@ -1,0 +1,116 @@
+name: QA
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - "qa"
+
+jobs:
+  deploy_ios:
+    runs-on: [self-hosted, macos]
+    name: Deploy iOS
+
+    steps:
+      - uses: actions/checkout@v3
+        name: Checkout
+
+      - uses: kuhnroyal/flutter-fvm-config-action@v1
+        name: Configure FVM
+
+      - uses: subosito/flutter-action@v2
+        name: Install Flutter
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: ${{ env.FLUTTER_CHANNEL }}
+
+      - name: Bundle install
+        run: |
+          cd ios
+          bundle config set --local path ~/.gem
+          bundle install
+          cd ..
+
+      - name: Clean
+        run: |
+          pod repo update
+          flutter clean
+
+      - name: Install project dependencies
+        run: flutter pub get
+
+      - name: Run code generation
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Build app
+        run: flutter build ios --no-codesign --release --build-number ${{ github.run_number }} --flavor staging --dart-define environment=staging --obfuscate --split-debug-info=debug-info
+
+      - name: Deploy IPA
+        uses: maierj/fastlane-action@v2.0.1
+        env:
+          GH_BASIC_AUTH: ${{ secrets.GH_BASIC_AUTH }}
+          FIREBASE_IOS_APP_ID: ${{ secrets.FIREBASE_IOS_APP_ID }}
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        with:
+          subdirectory: "ios"
+          lane: "qa"
+      
+      - name: Upload Debug Symbols to Sentry
+        run: flutter pub run sentry_dart_plugin
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_RELEASE: ${{ github.repository }}@${{ github.run_number }}
+
+  deploy_android:
+    runs-on: [self-hosted, ubuntu]
+    name: Deploy Android
+
+    steps:
+      - uses: actions/checkout@v3
+        name: Checkout
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: "11"
+
+      - name: Install Android SDK
+        uses: malinskiy/action-android/install-sdk@release/0.1.4
+
+      - uses: kuhnroyal/flutter-fvm-config-action@v1
+        name: Configure FVM
+
+      - uses: subosito/flutter-action@v2
+        name: Install Flutter
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: ${{ env.FLUTTER_CHANNEL }}
+
+      - name: Clean
+        run: flutter clean
+
+      - name: Install project dependencies
+        run: flutter pub get
+
+      - name: Run code generation
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Build APK
+        run: flutter build apk --release --build-number ${{ github.run_number }} --flavor staging --dart-define environment=staging --obfuscate --split-debug-info=debug-info
+
+      - name: Upload to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
+          token: ${{ secrets.FIREBASE_TOKEN }}
+          groups: qa
+          file: build/app/outputs/flutter-apk/app-staging-release.apk
+          releaseNotes: ""
+      
+      - name: Upload Debug Symbols to Sentry
+        run: flutter pub run sentry_dart_plugin
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_RELEASE: ${{ github.repository }}@${{ github.run_number }}
