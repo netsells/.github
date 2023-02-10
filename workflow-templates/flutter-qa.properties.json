@@ -1,7 +1,6 @@
 {
   "name": "Netsells: Flutter QA",
   "description": "Compiles staging Android and iOS apps and distributes to Firebase for internal QA.",
-  "categories": ["Dart", "Flutter"],
   "iconName": "flutter",
-  "filePatterns": ["pubspec.yaml"]
+  "filePatterns": ["pubspec.yaml$"]
 }
