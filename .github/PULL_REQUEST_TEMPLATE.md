@@ -23,7 +23,7 @@
 
 ### Links
 
-JIRA: https://netsells.atlassian.net/browse/<!--JIRAID-->
+JIRA: https://hedgehog-lab.atlassian.net/browse/<!--JIRAID-->
 
 ## Deployment
 
